@@ -1,8 +1,10 @@
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { HttpModule } from '@nestjs/axios';
+import type { MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { MockSessionMiddleware } from '../shared/modules/authorization/mock-session.middleware';
 import { User } from '../users/user.entity';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
@@ -23,4 +25,10 @@ import { MyEfreiStrategy } from './myefrei.strategy';
   providers: [AuthService, JwtAuthGuard, MyEfreiAuthGuard, MyEfreiStrategy],
   exports: [JwtAuthGuard, AuthService, JwtModule, ConfigModule, UsersModule],
 })
-export class AuthModule {}
+export class AuthModule implements NestModule {
+  public configure(consumer: MiddlewareConsumer): void {
+    consumer
+      .apply(MockSessionMiddleware)
+      .forRoutes('*myefrei*');
+  }
+}
