@@ -2,18 +2,19 @@ import {
   Collection,
   Entity,
   Enum,
-  Index,
   OneToMany,
   PrimaryKey,
   Property,
-  Unique,
 } from '@mikro-orm/core';
 import * as bcrypt from 'bcrypt';
 import { Exclude, Expose } from 'class-transformer';
+import type { MyEfreiDto } from '../auth/dto/myefrei.dto';
 import type { BadgeUnlock } from '../badges/badge-unlock.entity';
 import { EMAIL_INCLUDED } from '../shared/lib/constants';
 import { BaseEntity } from '../shared/lib/entities/base.entity';
+import { UserCreationOptions } from '../shared/lib/types/user-creation-options.interface';
 import { Role } from '../shared/modules/authorization/types/role.enum';
+import { SchoolRole } from '../shared/modules/authorization/types/school-roles.enum';
 
 @Entity()
 export class User extends BaseEntity {
@@ -33,8 +34,6 @@ export class User extends BaseEntity {
   password?: string;
 
   @Property({ type: 'text' })
-  @Unique()
-  @Index()
   @Expose({ groups: [EMAIL_INCLUDED] })
   email!: string;
 
@@ -53,6 +52,9 @@ export class User extends BaseEntity {
   @Enum({ items: () => Role, array: true, default: [Role.User] })
   roles: Role[] = [Role.User];
 
+  @Enum({ items: () => SchoolRole, array: true, default: [] })
+  schoolRoles: SchoolRole[] = [];
+
   @Property({ type: 'text' })
   color?: string;
 
@@ -66,13 +68,7 @@ export class User extends BaseEntity {
   @Property({ type: 'text' })
   description?: string;
 
-  constructor(options: {
-    username: string;
-    email: string;
-    firstname: string;
-    lastname: string;
-    fullname: string;
-  }) {
+  constructor(options: UserCreationOptions) {
     super();
     this.userId = options.username;
     this.email = options.email;
@@ -87,5 +83,12 @@ export class User extends BaseEntity {
 
   public async validatePassword(password: string): Promise<boolean> {
     return await bcrypt.compare(password, this.password!);
+  }
+
+  public hasChanged(dto: MyEfreiDto): boolean {
+    return this.firstname !== dto.firstname
+      || this.lastname !== dto.name
+      || this.fullname !== dto.fullName
+      || this.email !== dto.email;
   }
 }

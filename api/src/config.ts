@@ -5,7 +5,8 @@ interface Config {
   uploadMaxSize: number;
   uploadPath: string;
   port: number;
-  frontendUrl: string;
+  devFrontendPort: string;
+  baseUrl: string;
   nodeEnv: 'development' | 'production' | 'test';
   typesenseEnabled: boolean;
   typesenseApiKey: string;
@@ -50,10 +51,15 @@ export const config = createProfiguration<Config>({
     format: Number,
     env: 'PORT',
   },
-  frontendUrl: {
+  devFrontendPort: {
     default: 'http://localhost:3000',
     format: String,
     env: 'FRONTEND_URL',
+  },
+  baseUrl: {
+    default: 'horizon-efrei.fr',
+    format: String,
+    env: 'PROD_BASE_URL',
   },
   nodeEnv: {
     default: 'development',
@@ -183,3 +189,12 @@ export const config = createProfiguration<Config>({
   },
   configureEnv: () => ({ files: '.env' }),
 });
+
+export const computedConfig = {
+  apiUrl: config.get('nodeEnv') === 'development'
+    ? `http://localhost:${config.get('port')}`
+    : `https://api.${config.get('baseUrl')}`,
+  frontendUrl: config.get('nodeEnv') === 'development'
+    ? 'http://localhost:3000'
+    : `https://${config.get('baseUrl')}`,
+};

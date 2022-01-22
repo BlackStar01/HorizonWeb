@@ -7,13 +7,16 @@ import {
   Request,
   Response,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import type { CookieOptions } from 'express';
 import { Request as Req, Response as Res } from 'express';
+import { computedConfig } from '../config';
 import { CurrentUser } from '../shared/lib/decorators/current-user.decorator';
 import { Public } from '../shared/lib/decorators/public.decorator';
 import { SerializerIncludeEmail } from '../shared/lib/decorators/serializers.decorator';
+import { MockSessionInterceptor } from '../shared/modules/authorization/mock-session.interceptor';
 import { User } from '../users/user.entity';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -46,22 +49,23 @@ export class AuthController {
   }
 
   @Public()
+  @UseInterceptors(MockSessionInterceptor)
   @UseGuards(MyEfreiAuthGuard)
   @Get('myefrei')
   public myefreiLogin(): void {
-    console.log('DEBUG: handling myefrei login');
+    // Logging in with MyEfrei! Everything is handled by the guard.
   }
 
   @Public()
+  @UseInterceptors(MockSessionInterceptor)
   @UseGuards(MyEfreiAuthGuard)
   @Get('myefrei/callback')
   public async myefreiCallback(@CurrentUser() user: User, @Response() res: Res): Promise<void> {
     const login = await this.authService.login(user);
 
     res.cookie('accessToken', login.accessToken, cookieOptions)
-      .cookie('refreshToken', login.refreshToken, cookieOptions);
-
-    res.redirect('https://horizon-efrei.fr');
+      .cookie('refreshToken', login.refreshToken, cookieOptions)
+      .redirect(computedConfig.frontendUrl);
   }
 
   @Get('logout')
