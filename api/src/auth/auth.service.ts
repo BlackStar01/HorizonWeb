@@ -60,7 +60,7 @@ export class AuthService {
     return this.login(user);
   }
 
-  private getTokenOptions(type: 'access' | 'refresh'): JwtSignOptions {
+  public getTokenOptions(type: 'access' | 'refresh'): JwtSignOptions {
     const options: JwtSignOptions = {
       secret: config.get(`${type}TokenSecret`),
     };
