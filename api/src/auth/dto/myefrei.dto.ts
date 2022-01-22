@@ -1,5 +1,5 @@
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
-import type { UserCreationOptions } from 'src/shared/lib/types/user-creation-options.interface';
+import type { UserCreationOptions } from '../../shared/lib/types/user-creation-options.interface';
 
 export class MyEfreiDto {
   @IsString()
